@@ -19,35 +19,26 @@ var contact = {
     formData.append("email", this.email);
     console.log(formData);
 
-    fetch('http://api.aladhan.com/v1/calendar?latitude=51.508515&longitude=-0.1254872&method=2&month=4&year=2017')
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(myJson) {
-        console.log(JSON.stringify(myJson));
-      });
-
+    // p = new XMLHttpRequest();
     // p.open("POST", 'http://localhost:8000/contacts');
     // p.setRequestHeader('X-RCC-PROJECT', app.project);
     // p.setRequestHeader('X-RCC-ENVIRONMENT', app.environment);
     // p.setRequestHeader('X-RCC-VERSION', app.version);
     // p.send(formData);
 
+    p = fetch('http://localhost:8000/contacts', {
+      method: 'POST',
+      headers: new Headers(
+        [
+          ['X-RCC-PROJECT', app.project], 
+          ['X-RCC-ENVIRONMENT', app.environment], 
+          ['X-RCC-VERSION', app.version]
+        ]
+      ),
+      body: formData,
+      cache: 'no-cache'
+    });
     return p;
-
-    // p = fetch('http://localhost:8000/contacts', {
-    //   method: 'POST',
-    //   headers: new Headers(
-    //     [
-    //       ['X-RCC-PROJECT', app.project], 
-    //       ['X-RCC-ENVIRONMENT', app.environment], 
-    //       ['X-RCC-VERSION', app.version]
-    //     ]
-    //   ),
-    //   body: formData,
-    //   cache: 'no-cache'
-    // });
-    // return p;
   }
 };
 
