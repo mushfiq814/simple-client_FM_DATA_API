@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="bookingStyle.css">
+  <script src="bookingFunctions.js"></script>
+  <title>Schedule Tutor</title>
+</head>
+<body>
+  <div class="header">
+    <div class="top-bar">
+      <div class="blue-bar"></div>
+      <div class="white-bar">
+        <div class="header-flexbox">
+          <div>Home</div>
+          <div>About Us</div>
+          <div>Subjects</div>
+          <div>Test Prep</div>
+          <div>Homework Spot</div>
+          <div>Testimonials</div>
+          <div>Locations</div>
+          <div>Schedule Tutor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <h1>South Tampa</h1>
+    
+    <form action="">
+      <div class="scheduling-form">
+        <p>Select a Subject</p><select name="subject-list" id="subjectList"></select><p>Select a Tutor</p><select name="tutor-list" id="tutorList"></select>
+        <p id="date-select">Select a Date</p>
+        <div class="calendar-week-view">
+          <div class="arrow arrow-prev" id="arrowPrev" onmouseup="drawCalendarWeek(-1)"><</div>
+          <div class="day-item" id="day0"><p class="date-view" onselect="window.alert('sometext');"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day1"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day2"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day3"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day4"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day5"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="day-item" id="day6"><p class="date-view"></p><p class="day-view"></p></div>
+          <div class="arrow arrow-next" id="arrowNext" onmouseup="drawCalendarWeek(1)">></div>
+        </div>
+        <p>Select a Time</p>
+        <select name="time-list" id="timeList">
+          <option value="time-1">Time 1</option>
+          <option value="time-2">Time 2</option>
+          <option value="time-3">Time 3</option>
+          <option value="time-4">Time 4</option>
+        </select>
+        <p>Name</p><input type="text" name="nameField" id="name-field" placeholder="Enter your full name">
+        <p>Email</p><input type="email" name="emailField" id="email-field" placeholder="Enter your email address">
+        <p>Phone Number</p><input type="text" name="phoneField" id="phone-field" placeholder="Enter your phone number">
+        <input type="submit" value="Submit">
+      </div>
+    </form>
+  </div>
+
+  <div class="footer">
+    <div class="footer-flex">
+      <div>About Us</div>
+      <div>Home</div>
+      <div>Test Prep</div>
+      <div>Homework Spot</div>
+      <div>Testimonials</div>
+      <div>Contact Us</div>
+      <div>Blog</div>
+      <div>South Tampa</div>
+    </div>
+  </div>
+</body>
+</html>
