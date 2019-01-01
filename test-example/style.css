@@ -1,0 +1,60 @@
+* {
+  margin: 0; 
+  font-family: 'Montserrat';
+  background-color: #000;
+  color: white;
+}
+
+body {
+  padding-top: 50px;
+  width: 50%;
+  margin: 0 auto;
+}
+
+input {
+  border: none;
+  border-bottom: 2px solid white; 
+}
+
+input:focus {
+  outline: none;
+}
+
+.container {
+  padding: 40px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+#btnPost, #btnGetOne, #btnGetAll {
+  grid-column: 1 / span 2;
+  width: 50%;
+  margin: 10px auto;
+  height: 50px;
+}
+
+.header {
+  grid-column: 1 / span 2;
+  font-family: 'Open Sans';
+}
+
+.container :nth-child(n) {
+  height: 30px;
+  margin: 20px;
+  font-size: 25px;
+}
+
+.btn {
+  background: aqua;
+  color: #000;
+  font-weight: 900;
+  border: 2px solid #000;
+  border-radius: 5px;
+  height: 50px;
+}
+
+.btn:hover {
+  background: aquamarine;
+  color: #000;
+  font-weight: 900;
+}

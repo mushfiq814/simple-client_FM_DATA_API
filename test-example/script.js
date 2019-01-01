@@ -14,10 +14,15 @@ app = {
 create = function(event) {
   event.preventDefault();
   
-  var formData, p;
+  var formData;
   formData = new FormData();
   formData.append("name", nm.value);
   formData.append("email", em.value);
+  formData.append("phoneNumber", nm.value);
+  formData.append("subject", nm.value);
+  formData.append("tutor", nm.value);
+  formData.append("date", nm.value);
+  formData.append("time", nm.value);
 
   fetch('http://localhost:8000/create', {
     method: 'POST',
@@ -81,6 +86,12 @@ getAll = function(event) {
     for (var i=0; i<data.length; i++) {
       console.log("name: " + data[i].fieldData.Name);
       console.log("email: " + data[i].fieldData.Email);
+      console.log("phone: " + data[i].fieldData.PhoneNumber);
+      console.log("subject: " + data[i].fieldData.Subject);
+      console.log("tutor: " + data[i].fieldData.Tutor);
+      console.log("date: " + data[i].fieldData.Date);
+      console.log("time: " + data[i].fieldData.Time);
+      console.log("----------------------------------");
     }
   });
 }
