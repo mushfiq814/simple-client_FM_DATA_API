@@ -45,12 +45,11 @@
           <div class="day-item" id="day6"><p class="month-view"></p><p class="date-view"></p><p class="day-view"></p></div>
           <div class="arrow arrow-next" id="arrowNext" onmouseup="drawCalendarWeek(1)">></div>
         </div>
-        <p>Select a Time</p>
-        <select name="time-list" id="timeList">
-          <option value="7:00:00">7:00:00</option>
-          <option value="8:00:00">8:00:00</option>
-          <option value="9:00:00">9:00:00</option>
-          <option value="10:00:00">10:00:00</option>
+        <p>Select a Time</p><select name="time-list" id="timeList"></select>
+        <p>Select a Duration</p><select name="duration-list" id="durationList">
+          <option value="hour-1">1 hour</option>
+          <option value="hour-1.5">1.5 hours</option>
+          <option value="hour-2">2 hours</option>
         </select>
         <p>Name</p><input type="text" name="nameField" id="nameField" placeholder="Enter your full name">
         <p>Email</p><input type="email" name="emailField" id="emailField" placeholder="Enter your email address">
