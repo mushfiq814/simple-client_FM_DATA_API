@@ -4,6 +4,7 @@ var _globalJsonCategoryData = '';
 var _globalJsonSubjectData = '';
 var _globalJsonAppointmentData = '';
 var _globalDayValue = '';
+var _globalNumOfDaysCreated = 0;
 
 // onload starting function
 window.onload = function() {
@@ -29,7 +30,7 @@ window.onload = function() {
   
   // iteratively add Event Listeners to each day-item element on click
   for (var i=0; i<dayItem.length; i++) {
-    dayItem[i].addEventListener('click', (event)=>{
+    dayItem[i].addEventListener('click', (event)=>{      
       var eventTarget = event.target; // the clicked element
       var eventTargetParent = event.target.parentElement; // the parent of the clicked element
       var eventTargetParentClass = event.target.parentElement.className; // class for the parent of the clicked element
@@ -38,11 +39,21 @@ window.onload = function() {
         // get info from the parent element which is the 'day-item' element
         var date = eventTargetParent.getElementsByClassName('date-view')[0].innerHTML;
         var monthYear = eventTargetParent.getElementsByClassName('month-view')[0].innerHTML;
+        var changeColorElement = eventTargetParent;
       } else if (eventTargetParentClass == 'calendar-week-view') { // if the day-item element was clicked
         // get info from that element since it is the 'day-item' element
         var date = eventTarget.getElementsByClassName('date-view')[0].innerHTML;
         var monthYear = eventTarget.getElementsByClassName('month-view')[0].innerHTML;
+        var changeColorElement = eventTarget;
       }
+
+      // change the background color to show selected
+      // TODO drawCalendarWeek needs to generate infinite list of days for selection purposes
+      var dayItem = document.getElementsByClassName('day-item');
+      for (var j=0; j<dayItem.length; j++) {
+        dayItem[j].style.backgroundColor = '#2c7fb4';
+      }
+      changeColorElement.style.backgroundColor = 'red';
 
       // set the date inside the element to the global variable so it is known accross the document
       _globalDayValue = formatDate(new Date(date + " " + monthYear));
@@ -55,19 +66,6 @@ window.onload = function() {
   getSubjects();
   getTutors();
   getAppointments();
-}
-
-/**
- * formats the date given into MM/dd/yyyy format
- * @param {date} date date object to be formatted in MM/dd/yyyy
- */
-function formatDate(date) {
-  var mon = date.getMonth()+1;
-  var day = date.getDate();
-  var yea = date.getFullYear();
-  mon = mon < 10 ? '0'+mon : mon; // add leading zeros
-  day = day < 10 ? '0'+day : day;
-  return mon + '/' + day + '/' + yea;
 }
 
 /**
@@ -216,7 +214,7 @@ function getTutors() {
  * Get appointments with times
  */
 function getAppointments() {
-  fetch('http://localhost:8000/getAppointments', {
+  fetch('http://localhost:8000/getAppointments/400', {
     method: 'GET',
     headers: new Headers(
       [
@@ -300,14 +298,68 @@ function updateTutorDropDown() {
 function updateTimeDropDown() {
   var selectedTutor = tutorList.options[tutorList.selectedIndex].innerHTML;
   var selectedDate = _globalDayValue;
+  var selectedDayIndex = (new Date(selectedDate)).getDay(); // gets the index of the day seleced. e.g. 0=>Sunday, 1=>Monday, etc.
+  var selectedArrayIndex
   var appointmentStartTimes = [];
+
+  var tutorStartEndTimes = [
+    {
+      "slot" : 0,
+      "day" : "Sunday",
+      "start" : "10:00:00",
+      "end" : "22:00:00" 
+    },
+    {
+      "slot" : 1,
+      "day" : "Monday",
+      "start" : "10:00:00",
+      "end" : "20:00:00" 
+    },
+    {
+      "slot" : 2,
+      "day" : "Tuesday",
+      "start" : "10:00:00",
+      "end" : "23:00:00" 
+    },
+    {
+      "slot" : 3,
+      "day" : "Wednesday",
+      "start" : "10:00:00",
+      "end" : "23:00:00" 
+    },
+    {
+      "slot" : 4,
+      "day" : "Thursday",
+      "start" : "10:00:00",
+      "end" : "23:00:00" 
+    },
+    {
+      "slot" : 5,
+      "day" : "Friday",
+      "start" : "13:00:00",
+      "end" : "23:00:00" 
+    },
+    {
+      "slot" : 6,
+      "day" : "Saturday",
+      "start" : "12:00:00",
+      "end" : "22:00:00" 
+    }
+  ];
+  
+  appointmentStartTimes.push(["",tutorStartEndTimes[selectedDayIndex].start]);
   for (var i=0; i<_globalJsonAppointmentData.length; i++) {
     if (_globalJsonAppointmentData[i].fieldData.Tutor == selectedTutor && _globalJsonAppointmentData[i].fieldData.Date == selectedDate) {
-      appointmentStartTimes.push(_globalJsonAppointmentData[i].fieldData.Time);
+      appointmentStartTimes.push([_globalJsonAppointmentData[i].fieldData.StartTime,_globalJsonAppointmentData[i].fieldData.EndTime]);
     }
   }
+  appointmentStartTimes.push([tutorStartEndTimes[selectedDayIndex].end,""]);
+  console.log("Appointment Times:");
   console.log(appointmentStartTimes);
   var availableTimes = findAvailabilities(appointmentStartTimes);
+
+  // console.log("Available Times:");
+  // console.log(availableTimes);
   timeList.innerHTML = "";
   for (var j=0; j<availableTimes.length; j++) {
     var opt = document.createElement('option');
@@ -322,16 +374,55 @@ function updateTimeDropDown() {
  * @param {array} timeArray Array with appointment start times 
  * @returns array of availabilities
  * TODO: Find a way to include start time as start of day and end time as end of day
+ * TODO: Find a way to accomodate multiple durations
  */
 function findAvailabilities(timeArray) {
   var availableTimes = [];
   for (i=0; i<timeArray.length-1; i++) {
-    var start = new Date("01/04/2019 " + timeArray[i]);
-    var nxtStart = new Date("01/04/2019 " + timeArray[i+1]);
-    var numberOfApps = (nxtStart.getHours() - (start.getHours()+1));
-    for (j=0; j<numberOfApps; j++) {
-      availableTimes.push(start.getHours() + j + 1 + ":00:00");
-    }   
+    // var start = new Date("01/04/2019 " + timeArray[i][0]);
+    var end = new Date("01/04/2019 " + timeArray[i][1]);
+    var nxtStart = new Date("01/04/2019 " + timeArray[i+1][0]);
+    var numberOfApps = (nxtStart.getTime() - end.getTime())/1800000-1;
+
+    for (j=0; j<numberOfApps; j+=1) {
+      var time = end.getTime()/3600000 + j*0.5;
+      var formattedTime = formatTime(time);
+      availableTimes.push(formattedTime);
+    }
   }
   return availableTimes;
+}
+
+/**
+ * formats the time given in total hours into hh:mm:ss
+ * @param {*} hours to format
+ * TODO: Need to take into account 15 min appointments as well. e.g. 9:15-10:15 so availability shouldn't start at 8:30.
+ */
+function formatTime(hours) {
+  var timeZoneOffset = -5;
+  var calculatedHourValue = (hours%24) + timeZoneOffset;
+  var hourInDecimal = calculatedHourValue < 0 ? (24+calculatedHourValue) : calculatedHourValue
+  var hour = Math.floor(hourInDecimal);
+  var minute  = hourInDecimal%1*60;
+  
+  // var hourString = hour<10 ? '0'+hour : hour;
+  // var minuteString = minute<10 ? '0'+minute : minute;
+  var hourString = hour>12 ? hour-12 : hour;
+  var minuteString = minute<10 ? '0'+minute : minute;
+  var ampm = hour>12 ? 'pm' : 'am'
+
+  return `${hourString}:${minuteString} ${ampm}`;
+}
+
+/**
+ * formats the date given into MM/dd/yyyy format
+ * @param {date} date date object to be formatted in MM/dd/yyyy
+ */
+function formatDate(date) {
+  var mon = date.getMonth()+1;
+  var day = date.getDate();
+  var yea = date.getFullYear();
+  mon = mon < 10 ? '0'+mon : mon; // add leading zeros
+  day = day < 10 ? '0'+day : day;
+  return mon + '/' + day + '/' + yea;
 }

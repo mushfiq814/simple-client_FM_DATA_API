@@ -46,7 +46,7 @@ function getOne() {
  */
 function getAll() {
   console.log("Connecting to FileMaker");
-  fetch('http://localhost:8000/retrieveAll', {
+  fetch('http://localhost:8000/retrieve100', {
     method: 'GET',
     headers: new Headers(
       [
