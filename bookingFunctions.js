@@ -3,8 +3,12 @@ var _globalPageStateDay = 0;
 var _globalJsonCategoryData = '';
 var _globalJsonSubjectData = '';
 var _globalJsonAppointmentData = '';
+var _globalJsonTutorAvailabilityData = '';
 var _globalDayValue = '';
 var _globalNumOfDaysCreated = 0;
+
+var dayArray = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var monthArray = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 // onload starting function
 window.onload = function() {
@@ -53,7 +57,7 @@ window.onload = function() {
       for (var j=0; j<dayItem.length; j++) {
         dayItem[j].style.backgroundColor = '#2c7fb4';
       }
-      changeColorElement.style.backgroundColor = 'red';
+      changeColorElement.style.backgroundColor = '#555555';
 
       // set the date inside the element to the global variable so it is known accross the document
       _globalDayValue = formatDate(new Date(date + " " + monthYear));
@@ -66,6 +70,7 @@ window.onload = function() {
   getSubjects();
   getTutors();
   getAppointments();
+  getTutorAvailability();
 }
 
 /**
@@ -79,9 +84,7 @@ function drawCalendarWeek(delta) {
   if (delta==1) _globalPageStateDay++; // next Day
   else if (delta==-1) _globalPageStateDay--; // previous Day
 
-  // arrays for lookup days and months 
-  var dayArray = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  var monthArray = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  // arrays for lookup days and months
 
   var dayItem = document.getElementsByClassName('day-item');
   // TODO: Fix setTimeout()
@@ -181,7 +184,6 @@ function getSubjects() {
  * Get subjects with tutors
  */
 function getTutors() {
-  console.log("Connecting to FileMaker");
   fetch('http://localhost:8000/getTutors', {
     method: 'GET',
     headers: new Headers(
@@ -236,6 +238,32 @@ function getAppointments() {
     });
 
     _globalJsonAppointmentData = data;
+  }).then(()=>{
+    console.log("Successfully got all appointments!");
+  })
+}
+
+/**
+ * Get Tutor Start and End Times
+ */
+function getTutorAvailability() {
+  fetch('http://localhost:8000/getTutorAvailability', {
+    method: 'GET',
+    headers: new Headers(
+      [
+        ['X-RCC-PROJECT', app.project], 
+        ['X-RCC-ENVIRONMENT', app.environment], 
+        ['X-RCC-VERSION', app.version]
+      ]
+    ),
+    cache: 'no-cache'
+  }).then(function(response) {
+    return response.json();
+  }).then(function(myJson) {
+    var data = myJson.results.record.response.data;
+    _globalJsonTutorAvailabilityData = data;
+  }).then(()=>{
+    console.log("Successfully got Tutor Availabilities!");
   })
 }
 
@@ -299,67 +327,27 @@ function updateTimeDropDown() {
   var selectedTutor = tutorList.options[tutorList.selectedIndex].innerHTML;
   var selectedDate = _globalDayValue;
   var selectedDayIndex = (new Date(selectedDate)).getDay(); // gets the index of the day seleced. e.g. 0=>Sunday, 1=>Monday, etc.
-  var selectedArrayIndex
   var appointmentStartTimes = [];
-
-  var tutorStartEndTimes = [
-    {
-      "slot" : 0,
-      "day" : "Sunday",
-      "start" : "10:00:00",
-      "end" : "22:00:00" 
-    },
-    {
-      "slot" : 1,
-      "day" : "Monday",
-      "start" : "10:00:00",
-      "end" : "20:00:00" 
-    },
-    {
-      "slot" : 2,
-      "day" : "Tuesday",
-      "start" : "10:00:00",
-      "end" : "23:00:00" 
-    },
-    {
-      "slot" : 3,
-      "day" : "Wednesday",
-      "start" : "10:00:00",
-      "end" : "23:00:00" 
-    },
-    {
-      "slot" : 4,
-      "day" : "Thursday",
-      "start" : "10:00:00",
-      "end" : "23:00:00" 
-    },
-    {
-      "slot" : 5,
-      "day" : "Friday",
-      "start" : "13:00:00",
-      "end" : "23:00:00" 
-    },
-    {
-      "slot" : 6,
-      "day" : "Saturday",
-      "start" : "12:00:00",
-      "end" : "22:00:00" 
-    }
-  ];
+  var tutorStartEndTimes = calculateAvailability(selectedTutor);
   
+  console.log("start and end Times for " + selectedTutor);
+  console.log(tutorStartEndTimes);
+
+  // push start Time to calculation
   appointmentStartTimes.push(["",tutorStartEndTimes[selectedDayIndex].start]);
+  // push appointment Times in the middle
   for (var i=0; i<_globalJsonAppointmentData.length; i++) {
     if (_globalJsonAppointmentData[i].fieldData.Tutor == selectedTutor && _globalJsonAppointmentData[i].fieldData.Date == selectedDate) {
       appointmentStartTimes.push([_globalJsonAppointmentData[i].fieldData.StartTime,_globalJsonAppointmentData[i].fieldData.EndTime]);
     }
   }
+  // push end Time to calculation
   appointmentStartTimes.push([tutorStartEndTimes[selectedDayIndex].end,""]);
+
   console.log("Appointment Times:");
   console.log(appointmentStartTimes);
   var availableTimes = findAvailabilities(appointmentStartTimes);
 
-  // console.log("Available Times:");
-  // console.log(availableTimes);
   timeList.innerHTML = "";
   for (var j=0; j<availableTimes.length; j++) {
     var opt = document.createElement('option');
@@ -367,6 +355,31 @@ function updateTimeDropDown() {
     opt.innerHTML = availableTimes[j];
     timeList.appendChild(opt);
   }
+}
+
+/**
+ * calculation for finding the selected Tutor's availability
+ */
+function calculateAvailability(tutor) {
+  var availabilityArray = [];
+
+  for (var i=0; i<_globalJsonTutorAvailabilityData.length; i++) {
+    if (_globalJsonTutorAvailabilityData[i].fieldData.Tutors == tutor) {
+      for (var j=0; j<7; j++) {
+        var startTimeFieldName = 'day'+(j+1)+'_startTime';
+        var endTimeFieldName = 'day'+(j+1)+'_endTime';
+
+        availabilityArray.push({
+          "slot" : j,
+          "day" : dayArray[j],
+          "start" : _globalJsonTutorAvailabilityData[i].fieldData[startTimeFieldName],
+          "end" : _globalJsonTutorAvailabilityData[i].fieldData[endTimeFieldName]
+        });
+      }
+    }
+  }
+
+  return availabilityArray;
 }
 
 /**
@@ -378,18 +391,21 @@ function updateTimeDropDown() {
  */
 function findAvailabilities(timeArray) {
   var availableTimes = [];
-  for (i=0; i<timeArray.length-1; i++) {
-    // var start = new Date("01/04/2019 " + timeArray[i][0]);
-    var end = new Date("01/04/2019 " + timeArray[i][1]);
-    var nxtStart = new Date("01/04/2019 " + timeArray[i+1][0]);
-    var numberOfApps = (nxtStart.getTime() - end.getTime())/1800000-1;
+  if (timeArray[0][1]!=="") {
+    for (i=0; i<timeArray.length-1; i++) {
+      var end = new Date("01/04/2019 " + timeArray[i][1]);
+      var nxtStart = new Date("01/04/2019 " + timeArray[i+1][0]);
+      var numberOfApps = (nxtStart.getTime() - end.getTime())/3600000;
+      var bookingIntervals = 1; // inetrval in hours for which booking times are displayed
 
-    for (j=0; j<numberOfApps; j+=1) {
-      var time = end.getTime()/3600000 + j*0.5;
-      var formattedTime = formatTime(time);
-      availableTimes.push(formattedTime);
+      for (j=0; j<numberOfApps; j++) {
+        var time = end.getTime()/(3600000*bookingIntervals) + j*bookingIntervals;
+        var formattedTime = formatTime(time);
+        availableTimes.push(formattedTime);
+      }
     }
   }
+  
   return availableTimes;
 }
 
@@ -409,7 +425,7 @@ function formatTime(hours) {
   // var minuteString = minute<10 ? '0'+minute : minute;
   var hourString = hour>12 ? hour-12 : hour;
   var minuteString = minute<10 ? '0'+minute : minute;
-  var ampm = hour>12 ? 'pm' : 'am'
+  var ampm = hour>=12 ? 'pm' : 'am'
 
   return `${hourString}:${minuteString} ${ampm}`;
 }

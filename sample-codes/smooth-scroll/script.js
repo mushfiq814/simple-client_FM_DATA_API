@@ -78,13 +78,41 @@ const container = document.querySelector(".container");
 const leftBtn = document.getElementById('btn-left');
 const rightBtn = document.getElementById('btn-right');
 let translate = 0;
+let n = 8;
+
+// window.onload = () => {
+  for (divCreateRecur=0; divCreateRecur<358; divCreateRecur++) {
+    var newDiv = document.createElement('div');
+    newDiv.classList.add('inner');
+    newDiv.innerHTML = n;
+    container.appendChild(newDiv);
+    n++;
+  }
+// }
 
 leftBtn.addEventListener("click", function() {
   translate += 200;
   container.style.transform = "translateX(" + translate + "px" + ")";
+  console.log(translate);
+  showHideBtns(translate)
 });
 
 rightBtn.addEventListener("click", function() {
   translate -= 200;
   container.style.transform = "translateX(" + translate + "px" + ")";
+  console.log(translate);
+  showHideBtns(translate);
 });
+
+function showHideBtns(translate) {
+  if (translate>=0) { // hide left button
+    leftBtn.classList.add('hidden');
+    rightBtn.classList.remove('hidden');
+  } else if (translate<=-22000) { // hide right button
+    rightBtn.classList.add('hidden');
+    leftBtn.classList.remove('hidden');
+  } else {
+    rightBtn.classList.remove('hidden');
+    leftBtn.classList.remove('hidden');
+  }
+}

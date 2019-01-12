@@ -9,6 +9,13 @@
   --dm-orange: #f29c1f;
 }
 
+.arrow {
+  width: 30px;
+  height: 100%;
+  font-size: 20px;
+  font-weight: bold;
+}
+
 .blue-bar {
   height: 30px;
   background-color: var(--dm-blue);
@@ -78,7 +85,7 @@
 
 .day-item:hover {
   cursor: pointer;
-  background-color: rgb(96, 150, 184);
+  background-color: #555555;
 }
 
 .arrow {
