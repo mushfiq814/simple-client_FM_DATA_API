@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <script src="bookingFunctions.js"></script>
   <title>Schedule Tutor</title>
 </head>
+
 <body>
   <div class="header">
     <div class="top-bar">
@@ -29,10 +31,18 @@
 
   <div class="main-container">
     <h1>South Tampa</h1>
-    
+
     <form action="">
       <div class="scheduling-form">
-        <p>Select a Category</p><select name="category-list" id="categoryList"></select><p>Select a Subject</p><select name="subject-list" id="subjectList"></select><p>Select a Tutor</p><select name="tutor-list" id="tutorList"></select>
+        <p>Select a Category</p><select name="category-list" id="categoryList">
+          <option value="none">Choose a category</option>
+        </select>
+        <p>Select a Subject</p><select name="subject-list" id="subjectList">
+          <option value="none"></option>
+        </select>
+        <p>Select a Tutor</p><select name="tutor-list" id="tutorList">
+          <option value="none"></option>
+        </select>
         <p id="date-select">Select a Date</p>
         <div class="calendar-week-view">
           <div class="arrow arrow-prev" id="arrowPrev" onmouseup="drawCalendarWeek(-1)"><</div>
@@ -72,4 +82,5 @@
     </div>
   </div>
 </body>
+
 </html>
