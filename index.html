@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="style.css">
-  <script src="bookingFunctions.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
   <title>Schedule Tutor</title>
 </head>
 
@@ -38,13 +38,14 @@
           <option value="none">Choose a category</option>
         </select>
         <p>Select a Subject</p><select name="subject-list" id="subjectList">
-          <option value="none"></option>
+          <option value="none">Choose a subject</option>
         </select>
         <p>Select a Tutor</p><select name="tutor-list" id="tutorList">
-          <option value="none"></option>
+          <option value="none">Choose a tutor</option>
         </select>
         <p id="date-select">Select a Date</p>
-        <div class="calendar-week-view">
+        <input type="text" id="datepicker" placeholder="Click to open calendar">
+        <!-- <div class="calendar-week-view" id="calendarWeekView">
           <div class="arrow arrow-prev" id="arrowPrev" onmouseup="drawCalendarWeek(-1)"><</div>
           <div class="day-item" id="day0"><p class="month-view"></p><p class="date-view"></p><p class="day-view"></p></div>
           <div class="day-item" id="day1"><p class="month-view"></p><p class="date-view"></p><p class="day-view"></p></div>
@@ -54,16 +55,28 @@
           <div class="day-item" id="day5"><p class="month-view"></p><p class="date-view"></p><p class="day-view"></p></div>
           <div class="day-item" id="day6"><p class="month-view"></p><p class="date-view"></p><p class="day-view"></p></div>
           <div class="arrow arrow-next" id="arrowNext" onmouseup="drawCalendarWeek(1)">></div>
-        </div>
-        <p>Select a Time</p><select name="time-list" id="timeList"></select>
+        </div> -->
         <p>Select a Duration</p><select name="duration-list" id="durationList">
-          <option value="hour-1">1 hour</option>
-          <option value="hour-1.5">1.5 hours</option>
-          <option value="hour-2">2 hours</option>
+          <option value="1">1 hour</option>
+          <option value="1.5">1.5 hours</option>
+          <option value="2">2 hours</option>
         </select>
-        <p>Name</p><input type="text" name="nameField" id="nameField" placeholder="Enter your full name">
-        <p>Email</p><input type="email" name="emailField" id="emailField" placeholder="Enter your email address">
-        <p>Phone Number</p><input type="text" name="phoneField" id="phoneField" placeholder="Enter your phone number">
+        <div style="grid-column: 1 / span 2;">If the desired time is not shown, please reach out to an admin assistant.</div>
+        <p>Select a Time</p><select name="time-list" id="timeList"><option value="1"></option></select>
+
+        <p>Are you a new customer?</p>
+        <div class="existing-customer-radio">
+          <p><input type="radio" name="existingCustomerRadio" id="existingYes" value="Yes"></p>
+          <p>Yes</p>
+          <p><input type="radio" name="existingCustomerRadio" id="existingNo" value="No"></p>
+          <p>No</p>
+        </div>
+        <p>Student Name</p><input type="text" name="studentNameField" id="studentNameField" placeholder="Enter the student's full name">
+        <p>Student Email</p><input type="email" name="studentEmailField" id="studentEmailField" placeholder="Enter the student's email address">
+        <p>Student Phone Number</p><input type="text" name="studentPhoneField" id="studentPhoneField" placeholder="Enter the student's phone number">
+        <p>Parent Name</p><input type="text" name="parentNameField" id="parentNameField" placeholder="Enter the parent's full name">
+        <p>Parent Email</p><input type="email" name="parentEmailField" id="parentEmailField" placeholder="Enter the parent's email address">
+        <p>Parent Phone Number</p><input type="text" name="parentPhoneField" id="parentPhoneField" placeholder="Enter the parent's phone number">
         <input type="submit" value="Submit" id="submitBtn">
       </div>
     </form>
@@ -81,6 +94,19 @@
       <div>South Tampa</div>
     </div>
   </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script> 
+  <script src="pikaday.js"></script>
+  <script>
+    let maxNumberOfAvailableBookingDates = 60;
+    let today = new Date();
+    let maxDate = new Date(today.getTime() + maxNumberOfAvailableBookingDates * 24 * 3600000);
+    let picker = new Pikaday({
+      field: document.getElementById('datepicker') 
+    });
+    picker.setMinDate(today);
+    picker.setMaxDate(maxDate);
+  </script> 
+  <script src="bookingFunctions.js"></script>
 </body>
-
 </html>

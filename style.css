@@ -61,9 +61,9 @@
   margin: 0 auto;
 }
 
-#date-select {
+/* #date-select {
   grid-column: 1 / span 2;
-}
+} */
 
 .calendar-week-view {
   grid-column: 1 / span 2;
@@ -126,3 +126,11 @@
 }
 
 .date-view {font-size: 1.7em;}
+
+.existing-customer-radio {
+  display: flex;
+}
+
+.existing-customer-radio > p {
+  padding: 0 20px;
+}

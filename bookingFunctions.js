@@ -2,29 +2,17 @@
 var _globalPageStateDay = 0;
 var _globalJsonCategoryData = "";
 var _globalJsonSubjectData = "";
-var _globalJsonAppointmentData = "";
-var _globalJsonTutorAvailabilityData = "";
 var _globalDayValue = "";
 var _globalNumOfDaysCreated = 0;
 
-var dayArray = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-var monthArray = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec"
-];
+// TODO: Fix the layout name changes for Get Subjects, Get Tutors, Get Availability
 
-const apiUrl = "http://api.disciplinedmindstutoring.com";
-const apiLocalUrl = "http://localhost:8000";
+var dayArray = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var monthArray = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const apiUrl = "http://localhost:8000";
+// const apiUrl = "http://api.disciplinedmindstutoring.com";
+// const apiLocalUrl = "http://localhost:8000";
 
 // onload starting function
 window.onload = function() {
@@ -33,72 +21,52 @@ window.onload = function() {
   var subjectList = document.getElementById("subjectList");
   var tutorList = document.getElementById("tutorList");
   var timeList = document.getElementById("timeList");
-  var durationList = document.getElementById("timeList");
-  var nameField = document.getElementById("nameField");
-  var emailField = document.getElementById("emailField");
-  var phoneField = document.getElementById("phoneField");
+  var durationList = document.getElementById("durationList");
+
+  var studentNameField = document.getElementById("studentNameField");
+  var studentEmailField = document.getElementById("studentEmailField");
+  var studentPhoneField = document.getElementById("studentPhoneField");
+  var parentNameField = document.getElementById("parentNameField");
+  var parentEmailField = document.getElementById("parentEmailField");
+  var parentPhoneField = document.getElementById("parentPhoneField");
+
   var submitBtn = document.getElementById("submitBtn");
   var dayItem = document.getElementsByClassName("day-item");
+  
+  var dateList = document.getElementById("datepicker");
 
   // generate the day-item elements with dates starting from today
-  drawCalendarWeek(0);
+  // drawCalendarWeek(0);
   // add Event Listeners
   submitBtn.addEventListener("click", create, false);
   categoryList.addEventListener("change", () => {
-    categoryList.value === "none" ? subjectList.innerHTML = "" : updateSubjectDropDown()
+    categoryList.value === "none"
+      ? (subjectList.innerHTML = "")
+      : updateSubjectDropDown();
   });
   subjectList.addEventListener("change", () => {
-    subjectList.value === "none" ? tutorList.innerHTML = "" : updateTutorDropDown()
+    subjectList.value === "none"
+      ? (tutorList.innerHTML = "")
+      : updateTutorDropDown();
   });
   tutorList.addEventListener("change", () => {
-    tutorList.value === "none" ? timeList.innerHTML = "" : updateTimeDropDown()
+    tutorList.value === "none"
+      ? (timeList.innerHTML = "")
+      : updateTimeDropDown();
+  });
+  dateList.addEventListener("change", () => {
+    let dt = new Date(dateList.value);
+    _globalDayValue = formatDate(dt, 'MMDDYYYY');
+    console.log(_globalDayValue);
+    updateTimeDropDown();
   });
 
-  // iteratively add Event Listeners to each day-item element on click
-  for (var i = 0; i < dayItem.length; i++) {
-    dayItem[i].addEventListener("click", event => {
-      var eventTarget = event.target; // the clicked element
-      var eventTargetParent = event.target.parentElement; // the parent of the clicked element
-      var eventTargetParentClass = event.target.parentElement.className; // class for the parent of the clicked element
-
-      if (eventTargetParentClass == "day-item") {
-        // if the inside dates or months were clicked
-        // get info from the parent element which is the 'day-item' element
-        var date = eventTargetParent.getElementsByClassName("date-view")[0]
-          .innerHTML;
-        var monthYear = eventTargetParent.getElementsByClassName(
-          "month-view"
-        )[0].innerHTML;
-        var changeColorElement = eventTargetParent;
-      } else if (eventTargetParentClass == "calendar-week-view") {
-        // if the day-item element was clicked
-        // get info from that element since it is the 'day-item' element
-        var date = eventTarget.getElementsByClassName("date-view")[0].innerHTML;
-        var monthYear = eventTarget.getElementsByClassName("month-view")[0]
-          .innerHTML;
-        var changeColorElement = eventTarget;
-      }
-
-      // change the background color to show selected
-      // TODO drawCalendarWeek needs to generate infinite list of days for selection purposes
-      var dayItem = document.getElementsByClassName("day-item");
-      for (var j = 0; j < dayItem.length; j++) {
-        dayItem[j].style.backgroundColor = "#2c7fb4";
-      }
-      changeColorElement.style.backgroundColor = "#555555";
-
-      // set the date inside the element to the global variable so it is known accross the document
-      _globalDayValue = formatDate(new Date(date + " " + monthYear));
-
-      // update the Time dropdown to reflect the changed date
-      updateTimeDropDown();
-    });
-  }
+  // existing customer radio
+  // let selectedExistingCustomerOpt = document.querySelector('input[name = "existingCustomerRadio"]:checked') ? document.querySelector('input[name = "existingCustomerRadio"]:checked').value : '';
+  // console.log(selectedExistingCustomerOpt);
 
   getSubjects();
   getTutors();
-  getAppointments();
-  getTutorAvailability();
 };
 
 /**
@@ -115,8 +83,6 @@ function drawCalendarWeek(delta) {
   // next Day
   else if (delta == -1) _globalPageStateDay--; // previous Day
 
-  // arrays for lookup days and months
-
   var dayItem = document.getElementsByClassName("day-item");
   // TODO: Fix setTimeout()
   // NOTE: setTimeout is used here since the day-items are not created on page load and a 0 second delay has to be used
@@ -127,16 +93,26 @@ function drawCalendarWeek(delta) {
       var month = document.getElementsByClassName("month-view");
       var date = document.getElementsByClassName("date-view");
       var day = document.getElementsByClassName("day-view");
-      month[k].innerHTML = monthArray[tempDate.getMonth()] + " " + tempDate.getFullYear();
+      month[k].innerHTML =
+        monthArray[tempDate.getMonth()] + " " + tempDate.getFullYear();
       date[k].innerHTML = tempDate.getDate();
       day[k].innerHTML = dayArray[tempDate.getDay()];
     }
   }, 0);
+
+  // DYNAMICALLY GENERATE DAY ITEMS
+
+  var calendarWeekViewContainer = document.getElementById('calendarWeekView');
+  for (l=0; l<60; l++) {
+    document.createElement('div');
+  }
+
+
 }
 
 // app variables. Required for Middleware API
 app = {
-  project: "FM17_REST_DEMO",
+  project: "DM_FM17_API",
   environment: "DEV-LOCAL",
   version: "v1.0.0"
 };
@@ -154,45 +130,57 @@ function create(event) {
   formData = new FormData();
   // set desired values to be sent into http body
   formData.append(
-    "subject",
-    subjectList.options[subjectList.selectedIndex].innerHTML
+    "subjectID",
+    subjectList.options[subjectList.selectedIndex].value
   );
   formData.append(
-    "tutor",
-    tutorList.options[tutorList.selectedIndex].innerHTML
+    "tutorID",
+    tutorList.options[tutorList.selectedIndex].value
   );
   formData.append("date", _globalDayValue);
-  formData.append("time", timeList.options[timeList.selectedIndex].innerHTML);
-  formData.append("name", nameField.value);
-  formData.append("email", emailField.value);
-  formData.append("phoneNumber", phoneField.value);
+  formData.append("start", timeList.options[timeList.selectedIndex].innerHTML);
+  formData.append("student", studentNameField.value);
+  formData.append("duration", durationList.options[durationList.selectedIndex].innerHTML);
+
+  let additionalInfoText = `Existing Customer: #N/A
+  Student Email: ${studentEmailField.value}
+  Student Phone: ${studentPhoneField.value}
+  Parent Name: ${parentNameField.value}
+  Parent Email: ${parentEmailField.value}
+  Parent Phone: ${parentPhoneField.value}`;
+  additionalInfoText = additionalInfoText.replace(/[ \t\f\v]/g, '');
+  formData.append("additionalInfo",additionalInfoText);
+  
 
   // POST request
   fetch(apiUrl + "/create", {
     method: "POST",
     headers: new Headers([
-      ["X-RCC-PROJECT", app.project],
-      ["X-RCC-ENVIRONMENT", app.environment],
-      ["X-RCC-VERSION", app.version]
+      ["DM-PROJECT", app.project],
+      ["DM-ENVIRONMENT", app.environment],
+      ["DM-VERSION", app.version]
     ]),
     body: formData,
     cache: "no-cache"
   }).then(() => {
     console.log("Request Complete...");
+    window.targe
   });
 }
 
 /**
  * Get Subject Categories with subjects
+ * TODO: Fix formatting of JSON since Categories don't have a separate table
+ * and they are not grouped in a tree with their subjects anymore
  */
 function getSubjects() {
   console.log("Connecting to FileMaker");
-  fetch(apiUrl + "/getSubjects", {
+  fetch(apiUrl + "/getSubjectsFromCategories", {
     method: "GET",
     headers: new Headers([
-      ["X-RCC-PROJECT", app.project],
-      ["X-RCC-ENVIRONMENT", app.environment],
-      ["X-RCC-VERSION", app.version]
+      ["DM-PROJECT", app.project],
+      ["DM-ENVIRONMENT", app.environment],
+      ["DM-VERSION", app.version]
     ]),
     cache: "no-cache"
   })
@@ -202,11 +190,14 @@ function getSubjects() {
     .then(function(myJson) {
       var data = myJson.results.record.response.data;
       for (var i = 0; i < data.length; i++) {
-        var category = data[i].fieldData.Category;
-        var opt = document.createElement("option");
-        opt.value = "category" + (i + 1);
-        opt.innerHTML = category;
-        categoryList.appendChild(opt);
+        if (data[i].fieldData.ShowOnWebsite == "Yes") {
+          var category = data[i].fieldData.CategoryName;
+          var categoryId = data[i].fieldData.CategoryID;
+          var opt = document.createElement("option");
+          opt.value = categoryId;
+          opt.innerHTML = category;
+          categoryList.appendChild(opt);
+        }
       }
       _globalJsonCategoryData = data;
     })
@@ -219,12 +210,12 @@ function getSubjects() {
  * Get subjects with tutors
  */
 function getTutors() {
-  fetch(apiUrl + "/getTutors", {
+  fetch(apiUrl + "/getTutorsFromSubjects", {
     method: "GET",
     headers: new Headers([
-      ["X-RCC-PROJECT", app.project],
-      ["X-RCC-ENVIRONMENT", app.environment],
-      ["X-RCC-VERSION", app.version]
+      ["DM-PROJECT", app.project],
+      ["DM-ENVIRONMENT", app.environment],
+      ["DM-VERSION", app.version]
     ]),
     cache: "no-cache"
   })
@@ -253,87 +244,47 @@ function getTutors() {
 }
 
 /**
- * Get appointments with times
- */
-function getAppointments() {
-  fetch(apiUrl + "/getAppointments/400", {
-    method: "GET",
-    headers: new Headers([
-      ["X-RCC-PROJECT", app.project],
-      ["X-RCC-ENVIRONMENT", app.environment],
-      ["X-RCC-VERSION", app.version]
-    ]),
-    cache: "no-cache"
-  })
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(myJson) {
-      var data = myJson.results.record.response.data;
-
-      data.sort((a, b) => {
-        if (a.fieldData.DateTimeConcat < b.fieldData.DateTimeConcat) return -1;
-        if (a.fieldData.DateTimeConcat > b.fieldData.DateTimeConcat) return 1;
-        else return 0;
-      });
-
-      _globalJsonAppointmentData = data;
-    })
-    .then(() => {
-      console.log("Successfully got all appointments!");
-    });
-}
-
-/**
- * Get Tutor Start and End Times
- */
-function getTutorAvailability() {
-  fetch(apiUrl + "/getTutorAvailability", {
-    method: "GET",
-    headers: new Headers([
-      ["X-RCC-PROJECT", app.project],
-      ["X-RCC-ENVIRONMENT", app.environment],
-      ["X-RCC-VERSION", app.version]
-    ]),
-    cache: "no-cache"
-  })
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(myJson) {
-      var data = myJson.results.record.response.data;
-      _globalJsonTutorAvailabilityData = data;
-    })
-    .then(() => {
-      console.log("Successfully got Tutor Availabilities!");
-    });
-}
-
-/**
  * Updates select tags with relevant option tags.
  * Should be called whenever higher order select field is changed
  */
 function updateSubjectDropDown() {
-  var selectedCategory =
-    categoryList.options[categoryList.selectedIndex].innerHTML;
-  var selectedCategoryIndex = -1;
+  var selectedCategoryId =
+    categoryList.options[categoryList.selectedIndex].value;
+
   for (var i = 0; i < _globalJsonCategoryData.length; i++) {
-    if (_globalJsonCategoryData[i].fieldData.Category == selectedCategory) {
-      selectedCategoryIndex = i;
+    if (_globalJsonCategoryData[i].fieldData.CategoryID == selectedCategoryId) {
+      var subjects =
+        _globalJsonCategoryData[i].portalData
+          .WEB_Subjects_forCategoriesWithSubjectPortals;
       break;
     }
   }
 
   // TODO: Create variables for layout names such as SubjectToTutors.
-  var subjects =
-    _globalJsonCategoryData[selectedCategoryIndex].portalData.Subjects;
   subjectList.innerHTML = "";
+  var opt = document.createElement("option");
+  opt.innerHTML = "Choose a subject";
+  subjectList.appendChild(opt);
+  tutorList.innerHTML = "";
+  var opt = document.createElement("option");
+  opt.innerHTML = "Choose a tutor";
+  tutorList.appendChild(opt);
   for (var j = 0; j < subjects.length; j++) {
-    var subject = subjects[j]["Subjects::Subjects"];
-    var opt = document.createElement("option");
-    opt.value = "subject" + (j + 1);
-    opt.innerHTML = subject;
-    subjectList.appendChild(opt);
+    if (
+      subjects[j][
+        "WEB_Subjects_forCategoriesWithSubjectPortals::ShowOnWebsite"
+      ] == "Yes"
+    ) {
+      var subject =
+        subjects[j][
+          "WEB_Subjects_forCategoriesWithSubjectPortals::Subject Name"
+        ];
+      var opt = document.createElement("option");
+      opt.value =
+        subjects[j]["WEB_Subjects_forCategoriesWithSubjectPortals::ID_subject"];
+      opt.innerHTML = subject;
+      subjectList.appendChild(opt);
+    }
   }
 }
 
@@ -342,24 +293,24 @@ function updateSubjectDropDown() {
  * Should be called whenever higher order select field is changed
  */
 function updateTutorDropDown() {
-  var selectedSubject =
-    subjectList.options[subjectList.selectedIndex].innerHTML;
-  var selectedSubjectIndex = -1;
+  var selectedSubjectId = subjectList.options[subjectList.selectedIndex].value;
+
   for (var i = 0; i < _globalJsonSubjectData.length; i++) {
-    if (_globalJsonSubjectData[i].fieldData.Subjects == selectedSubject) {
-      selectedSubjectIndex = i;
+    if (_globalJsonSubjectData[i].fieldData.ID_subject == selectedSubjectId) {
+      var tutors = _globalJsonSubjectData[i].portalData.WEB_Subjects_Tutor;
       break;
     }
   }
 
   // TODO: Create variables for layout names such as SubjectToTutors.
-  var tutors =
-    _globalJsonSubjectData[selectedSubjectIndex].portalData.SubjectToTutors;
   tutorList.innerHTML = "";
+  var opt = document.createElement("option");
+  opt.innerHTML = "Choose a tutor";
+  tutorList.appendChild(opt);
   for (var j = 0; j < tutors.length; j++) {
-    var tutor = tutors[j]["Tutors::Tutors"];
+    var tutor = tutors[j]["WEB_Subjects_Tutor::Tutor_Name"];
     var opt = document.createElement("option");
-    opt.value = "tutor" + (j + 1);
+    opt.value = tutors[j]["WEB_Subjects_Tutor::id_tutor"];
     opt.innerHTML = tutor;
     tutorList.appendChild(opt);
   }
@@ -370,131 +321,92 @@ function updateTutorDropDown() {
  * Should be called whenever higher order select field is changed
  */
 function updateTimeDropDown() {
-  var selectedTutor = tutorList.options[tutorList.selectedIndex].innerHTML;
+  var selectedTutorId = tutorList.options[tutorList.selectedIndex].value;
   var selectedDate = _globalDayValue;
-  var selectedDayIndex = new Date(selectedDate).getDay(); // gets the index of the day seleced. e.g. 0=>Sunday, 1=>Monday, etc.
-  var appointmentStartTimes = [];
-  var tutorStartEndTimes = calculateAvailability(selectedTutor);
-
-  console.log("start and end Times for " + selectedTutor);
-  console.log(tutorStartEndTimes);
-
-  // push start Time to calculation
-  appointmentStartTimes.push(["", tutorStartEndTimes[selectedDayIndex].start]);
-  // push appointment Times in the middle
-  for (var i = 0; i < _globalJsonAppointmentData.length; i++) {
-    if (
-      _globalJsonAppointmentData[i].fieldData.Tutor == selectedTutor &&
-      _globalJsonAppointmentData[i].fieldData.Date == selectedDate
-    ) {
-      appointmentStartTimes.push([
-        _globalJsonAppointmentData[i].fieldData.StartTime,
-        _globalJsonAppointmentData[i].fieldData.EndTime
-      ]);
-    }
-  }
-  // push end Time to calculation
-  appointmentStartTimes.push([tutorStartEndTimes[selectedDayIndex].end, ""]);
-
-  console.log("Appointment Times:");
-  console.log(appointmentStartTimes);
-  var availableTimes = findAvailabilities(appointmentStartTimes);
-
-  timeList.innerHTML = "";
-  for (var j = 0; j < availableTimes.length; j++) {
-    var opt = document.createElement("option");
-    opt.value = "time" + (j + 1);
-    opt.innerHTML = availableTimes[j];
-    timeList.appendChild(opt);
-  }
-}
-
-/**
- * calculation for finding the selected Tutor's availability
- */
-function calculateAvailability(tutor) {
-  var availabilityArray = [];
-
-  for (var i = 0; i < _globalJsonTutorAvailabilityData.length; i++) {
-    if (_globalJsonTutorAvailabilityData[i].fieldData.Tutors == tutor) {
-      for (var j = 0; j < 7; j++) {
-        var startTimeFieldName = "day" + (j + 1) + "_startTime";
-        var endTimeFieldName = "day" + (j + 1) + "_endTime";
-
-        availabilityArray.push({
-          slot: j,
-          day: dayArray[j],
-          start:
-            _globalJsonTutorAvailabilityData[i].fieldData[startTimeFieldName],
-          end: _globalJsonTutorAvailabilityData[i].fieldData[endTimeFieldName]
-        });
-      }
-    }
-  }
-
-  return availabilityArray;
-}
-
-/**
- * Calculates 1 hour long availabilities between appointments provided
- * @param {array} timeArray Array with appointment start times
- * @returns array of availabilities
- * TODO: Find a way to include start time as start of day and end time as end of day
- * TODO: Find a way to accomodate multiple durations
- */
-function findAvailabilities(timeArray) {
   var availableTimes = [];
-  if (timeArray[0][1] !== "") {
-    for (i = 0; i < timeArray.length - 1; i++) {
-      var end = new Date("01/04/2019 " + timeArray[i][1]);
-      var nxtStart = new Date("01/04/2019 " + timeArray[i + 1][0]);
-      var numberOfApps = (nxtStart.getTime() - end.getTime()) / 3600000;
-      var bookingIntervals = 1; // inetrval in hours for which booking times are displayed
 
-      for (j = 0; j < numberOfApps; j++) {
-        var time =
-          end.getTime() / (3600000 * bookingIntervals) + j * bookingIntervals;
-        var formattedTime = formatTime(time);
-        availableTimes.push(formattedTime);
+  console.log(`${selectedDate}-${selectedTutorId}-ST`);
+
+  fetch(apiUrl + `/getTutorAvailability/${selectedDate}-${selectedTutorId}-WC`, {
+    method: "GET",
+    headers: new Headers([
+      ["DM-PROJECT", app.project],
+      ["DM-ENVIRONMENT", app.environment],
+      ["DM-VERSION", app.version]
+    ]),
+    cache: "no-cache"
+  })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(myJson) {
+      var availableTimes = myJson.results.record.response.data;
+      let startTimes = calculateAvailableTimes(availableTimes);
+      
+      timeList.innerHTML = "";
+      for (var j = 0; j < startTimes.length; j++) {
+        var opt = document.createElement("option");
+        opt.value = "time" + (j + 1);
+        opt.innerHTML = `${startTimes[j]}`;
+        // opt.innerHTML = `${availableTimes[j].fieldData.StartTimestamp} to ${availableTimes[j].fieldData.EndTimestamp}`;
+        timeList.appendChild(opt);
       }
-    }
-  }
+    })
+    .catch(e => console.log(e));
 
-  return availableTimes;
 }
 
 /**
- * formats the time given in total hours into hh:mm:ss
- * @param {*} hours to format
- * TODO: Need to take into account 15 min appointments as well. e.g. 9:15-10:15 so availability shouldn't start at 8:30.
+ * calculate Availability based on selected Duration
+ * @param {array} arrayOfAvailableTimes array containing available start and end timestamps
  */
-function formatTime(hours) {
-  var timeZoneOffset = -5;
-  var calculatedHourValue = (hours % 24) + timeZoneOffset;
-  var hourInDecimal =
-    calculatedHourValue < 0 ? 24 + calculatedHourValue : calculatedHourValue;
-  var hour = Math.floor(hourInDecimal);
-  var minute = (hourInDecimal % 1) * 60;
+function calculateAvailableTimes(arrayOfAvailableTimes) {
+  let selectedDuration = durationList.options[durationList.selectedIndex].value;
+  let result = [];
+  
+  
+  // check for when there are no available times
+  if (arrayOfAvailableTimes[0].fieldData.ExampleText == "Tutor Not Available") {
+    result.push(["Not Available"]);
+  } else {
+    for (var i=0; i<arrayOfAvailableTimes.length; i++) {
+      let startTime = new Date (arrayOfAvailableTimes[i].fieldData.StartTimestamp);
+      let endTime = new Date (arrayOfAvailableTimes[i].fieldData.EndTimestamp);
+      let defaultGap = 1;
+      
+      let numOfLessons = ( ( ( (endTime-startTime) % (24*3600000) ) / 3600000 - selectedDuration ) / defaultGap ) + 1;
+      console.log(`Available: ${startTime} to ${endTime}. Fits ${numOfLessons} lessons ${selectedDuration} hour each`);
+      
+      for (let j=0; j<numOfLessons; j++) {
+        let calculatedStart = new Date(startTime.getTime() + j*defaultGap*3600000);
+        result.push(formatDate(calculatedStart,'HMM AMPM'));
+      }
 
-  // var hourString = hour<10 ? '0'+hour : hour;
-  // var minuteString = minute<10 ? '0'+minute : minute;
-  var hourString = hour > 12 ? hour - 12 : hour;
-  var minuteString = minute < 10 ? "0" + minute : minute;
-  var ampm = hour >= 12 ? "pm" : "am";
+    }
+  }
 
-  return `${hourString}:${minuteString} ${ampm}`;
+  return result;
 }
 
 /**
  * formats the date given into MM/dd/yyyy format
  * @param {date} date date object to be formatted in MM/dd/yyyy
  */
-function formatDate(date) {
-  var mon = date.getMonth() + 1;
-  var day = date.getDate();
-  var yea = date.getFullYear();
-  mon = mon < 10 ? "0" + mon : mon; // add leading zeros
-  day = day < 10 ? "0" + day : day;
-  return mon + "/" + day + "/" + yea;
+function formatDate(date, option) {
+  if (option == 'MMDDYYYY') {
+    var mon = date.getMonth() + 1;
+    var day = date.getDate();
+    var yea = date.getFullYear();
+    mon = mon < 10 ? "0" + mon : mon; // add leading zeros
+    day = day < 10 ? "0" + day : day;
+    return mon + "-" + day + "-" + yea;
+  } else if (option == 'HMM AMPM') {
+    var hr = date.getHours();
+    var min = date.getMinutes();
+    var ampm = hr > 11 ? 'pm' : 'am';
+    if (hr==0) hr=12;
+    else hr = hr > 12 ? (hr-12) : hr;
+    min = min < 10 ? "0" + min : min; // add leading zeros
+    return hr + ":" + min + " " + ampm;
+  }
 }
-

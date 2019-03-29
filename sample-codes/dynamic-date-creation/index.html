@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+</head>
+<body>
+  <div class="scheduling-form">
+    <div class="calendar-month-view" id="calendarMonthView">
+      <div class="navigation-row">
+        <button class="button" id="prevBtn">Prev</button>
+        <div id="monthAndYear"></div>
+        <button class="button" id="nextBtn">Next</button>
+      </div>
+      <div id="daysOfTheWeek">
+        <div class="day-name" id="day0">Sunday</div>
+        <div class="day-name" id="day1">Monday</div>
+        <div class="day-name" id="day2">Tuesday</div>
+        <div class="day-name" id="day3">Wednesday</div>
+        <div class="day-name" id="day4">Thursday</div>
+        <div class="day-name" id="day5">Friday</div>
+        <div class="day-name" id="day6">Saturday</div>
+      </div>
+      <div id="additionalItems"></div>
+    </div>
+  </div>
+  <input type="text" id="datepicker">
+  <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script> 
+  <script src="pikaday.js"></script>
+  <script>
+    let today = new Date();
+    let maxDate = new Date(today.getTime() + 60 * 24 * 3600000);
+    let picker = new Pikaday({
+      field: document.getElementById('datepicker') 
+    });
+    picker.setMinDate(today);
+    picker.setMaxDate(maxDate);
+  </script> 
+  <script src="script.js"></script>
+</body>
+</html>

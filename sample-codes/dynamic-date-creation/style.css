@@ -1,0 +1,103 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Open Sans';
+
+  --dm-blue: #2c7fb4;
+  --dm-green: #14a085;
+  --dm-orange: #f29c1f;
+}
+
+.scheduling-form {
+  padding: 30px 0;
+  width: 80%;
+  margin: 0 auto;
+  display: grid;
+}
+
+/* .calendar-month-view {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr 2fr 2fr 2fr 2fr;
+} */
+
+.navigation-row {
+  display: grid;
+  grid-template-columns: 1fr 5fr 1fr;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  grid-column: 1 / span 7;
+}
+
+.day-name {
+  text-align: center;
+  align-items: center;
+  color: var(--dm-blue);
+  height: 50px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 15px;
+  border-radius: 5px;
+  transition: 200ms all;
+  font-weight: 900;
+}
+
+.day-item {
+  text-align: center;
+  align-items: center;
+  background-color: var(--dm-blue);
+  color: #FFF;
+  height: 50px;
+  width: 90%;
+  margin: 10px auto;
+  padding: 15px;
+  border-radius: 5px;
+  transition: 200ms all;
+}
+
+.day-item:hover {
+  cursor: pointer;
+  background-color: #555555;
+}
+
+.inactive-day-item {
+  text-align: center;
+  align-items: center;
+  background-color: #ccc;
+  color: #FFF;
+  height: 50px;
+  width: 90%;
+  margin: 10px auto;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.button {
+  font-weight: 600;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid var(--dm-blue);
+  border-radius: 5px;
+  padding: 10px 30px;
+}
+
+.button:hover {
+  cursor: pointer;
+  background-color: var(--dm-blue);
+  color: #fff;
+}
+
+#additionalItems, #daysOfTheWeek {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr 2fr 2fr 2fr 2fr;
+}
+
+.checkBx:checked + label > .day-item {
+  color: #00f;
+  background-color: #00f;
+}
+
+.checkBx { 
+  display: none;
+}
