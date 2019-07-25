@@ -1,0 +1,5 @@
+orignal IP for AWS Route53 A Name
+Link: https://console.aws.amazon.com/route53/home#resource-record-sets:Z3FIG5LILNDI3D
+Change 'Alias Target' to No and enter IP
+
+3.86.121.224

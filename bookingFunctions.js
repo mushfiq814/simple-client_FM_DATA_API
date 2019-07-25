@@ -9,10 +9,10 @@ var _globalNumOfDaysCreated = 0;
 
 var dayArray = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var monthArray = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var overlay = document.getElementsByClassName("toggle");
 
-const apiUrl = "http://localhost:8000";
-// const apiUrl = "http://api.disciplinedmindstutoring.com";
-// const apiLocalUrl = "http://localhost:8000";
+// const apiUrl = "http://localhost:8000";
+const apiUrl = "https://api.disciplinedmindstutoring.com";
 
 // onload starting function
 window.onload = function() {
@@ -37,29 +37,41 @@ window.onload = function() {
 
   // generate the day-item elements with dates starting from today
   // drawCalendarWeek(0);
+
   // add Event Listeners
   submitBtn.addEventListener("click", create, false);
+
   categoryList.addEventListener("change", () => {
+    subjectList.disabled = false;
     categoryList.value === "none"
       ? (subjectList.innerHTML = "")
       : updateSubjectDropDown();
   });
   subjectList.addEventListener("change", () => {
-    subjectList.value === "none"
-      ? (tutorList.innerHTML = "")
-      : updateTutorDropDown();
+    if (_globalDayValue != "") {
+      tutorList.disabled = false;
+      subjectList.value === "none"
+        ? (tutorList.innerHTML = "")
+        : updateTutorDropDown();
+    }
   });
   tutorList.addEventListener("change", () => {
+    timeList.disabled = false;
     tutorList.value === "none"
       ? (timeList.innerHTML = "")
       : updateTimeDropDown();
   });
   dateList.addEventListener("change", () => {
+    tutorList.disabled = false;
+    timeList.disabled = false;
+    durationList.disabled = false;
     let dt = new Date(dateList.value);
     _globalDayValue = formatDate(dt, 'MMDDYYYY');
-    console.log(_globalDayValue);
-    updateTimeDropDown();
+    updateTutorDropDown();
   });
+  durationList.addEventListener("change", () => {
+    updateTimeDropDown();   
+  })
 
   // existing customer radio
   // let selectedExistingCustomerOpt = document.querySelector('input[name = "existingCustomerRadio"]:checked') ? document.querySelector('input[name = "existingCustomerRadio"]:checked').value : '';
@@ -292,7 +304,7 @@ function updateSubjectDropDown() {
  * Updates select tags with relevant option tags.
  * Should be called whenever higher order select field is changed
  */
-function updateTutorDropDown() {
+async function updateTutorDropDown() {
   var selectedSubjectId = subjectList.options[subjectList.selectedIndex].value;
 
   for (var i = 0; i < _globalJsonSubjectData.length; i++) {
@@ -302,32 +314,72 @@ function updateTutorDropDown() {
     }
   }
 
-  // TODO: Create variables for layout names such as SubjectToTutors.
   tutorList.innerHTML = "";
   var opt = document.createElement("option");
   opt.innerHTML = "Choose a tutor";
   tutorList.appendChild(opt);
-  for (var j = 0; j < tutors.length; j++) {
-    var tutor = tutors[j]["WEB_Subjects_Tutor::Tutor_Name"];
-    var opt = document.createElement("option");
-    opt.value = tutors[j]["WEB_Subjects_Tutor::id_tutor"];
-    opt.innerHTML = tutor;
-    tutorList.appendChild(opt);
+
+  console.log("TUTORS LOADING...");
+  document.getElementById("toggle").style.display = "block";
+
+  for (var k=0; k<tutors.length; k++) {
+    var tutorId = tutors[k]["WEB_Subjects_Tutor::id_tutor"];
+    var tutorName = tutors[k]["WEB_Subjects_Tutor::Tutor_Name"];
+    var date = _globalDayValue;
+    await getTutorAvailabilityThroughFM(tutorId, date, tutorName);  
   }
+  
+  console.log("TUTOR LOADING DONE");
+  document.getElementById("toggle").style.display = "none";
+  // overlay[0].style.display = "none";
+  // overlay[1].style.display = "none";
+}
+
+async function getTutorAvailabilityThroughFM(tutorId, date, tutorName) {
+  // see if all the found tutors are avaialble through FM script
+  var availableTimes = [];
+
+  await fetch(apiUrl + `/getTutorAvailability/${date}-${tutorId}-ST`, {
+    method: "GET",
+    headers: new Headers([
+      ["DM-PROJECT", app.project],
+      ["DM-ENVIRONMENT", app.environment],
+      ["DM-VERSION", app.version]
+    ]),
+    cache: "no-cache"
+  })
+    .then(response => response.json())
+    .then(myJson => {
+      var availableTimes = myJson.results.record.response.data;
+      var calculatedTimes = calculateAvailableTimes(availableTimes);
+      console.log("FOR: " + tutorName + "; " + availableTimes[0].fieldData.ExampleText + "; " + calculatedTimes[0]);
+      if (availableTimes[0].fieldData.ExampleText == "Tutor Not Available" || calculatedTimes[0]=="Not Available") {
+        console.log("FAILED " + tutorName);
+      } else {
+        console.log("PASSED " + tutorName);
+        var opt = document.createElement("option");
+        opt.value = tutorId
+        opt.innerHTML = tutorName;
+        tutorList.appendChild(opt);
+      }
+    })
+    .catch(e => console.log(e));
 }
 
 /**
  * Updates select tags with relevant option tags.
  * Should be called whenever higher order select field is changed
  */
-function updateTimeDropDown() {
+async function updateTimeDropDown() {
   var selectedTutorId = tutorList.options[tutorList.selectedIndex].value;
   var selectedDate = _globalDayValue;
   var availableTimes = [];
 
-  console.log(`${selectedDate}-${selectedTutorId}-ST`);
+  // console.log(`${selectedDate}-${selectedTutorId}-ST`);
 
-  fetch(apiUrl + `/getTutorAvailability/${selectedDate}-${selectedTutorId}-WC`, {
+  document.getElementById("toggle").style.display = "block";
+
+  await fetch(apiUrl + `/getTutorAvailability/${selectedDate}-${selectedTutorId}-ST`, {
     method: "GET",
     headers: new Headers([
       ["DM-PROJECT", app.project],
@@ -353,6 +405,8 @@ function updateTimeDropDown() {
       }
     })
     .catch(e => console.log(e));
+  
+  document.getElementById("toggle").style.display = "none";
 
 }
 
@@ -375,11 +429,15 @@ function calculateAvailableTimes(arrayOfAvailableTimes) {
       let defaultGap = 1;
       
       let numOfLessons = ( ( ( (endTime-startTime) % (24*3600000) ) / 3600000 - selectedDuration ) / defaultGap ) + 1;
-      console.log(`Available: ${startTime} to ${endTime}. Fits ${numOfLessons} lessons ${selectedDuration} hour each`);
       
-      for (let j=0; j<numOfLessons; j++) {
-        let calculatedStart = new Date(startTime.getTime() + j*defaultGap*3600000);
-        result.push(formatDate(calculatedStart,'HMM AMPM'));
+      if (numOfLessons==0 || numOfLessons==null || Number.isNaN(numOfLessons)) {
+        result.push(["Not Available"]);
+      }
+      else {
+        for (let j=0; j<numOfLessons; j++) {
+          let calculatedStart = new Date(startTime.getTime() + j*defaultGap*3600000);
+          result.push(formatDate(calculatedStart,'HMM AMPM'));
+        }
       }
 
     }
@@ -409,4 +467,35 @@ function formatDate(date, option) {
     min = min < 10 ? "0" + min : min; // add leading zeros
     return hr + ":" + min + " " + ampm;
   }
+}
+
+function showLoadingScreen() {
+  document.getElementsByClassName("underneath")[0].style.opacity = 0.2;
+
+  let loadingScreen = document.createElement("div");
+  loadingScreen.classList.add("loading");
+  loadingScreen.style.zIndex = 1000;
+  loadingScreen.style.position = "fixed";
+  loadingScreen.style.height = "100%";
+  loadingScreen.style.width = "100%";
+
+  let loaderText = document.createElement('p');
+  loaderText.classList.add('loader-text');
+  loaderText.innerText = "Loading...";
+  let loaderIcon = document.createElement('div');
+  loaderIcon.classList.add('loader');
+
+  loadingScreen.appendChild(loaderText);
+  loadingScreen.appendChild(loaderIcon);
+
+  let mainPageElement = document.getElementsByClassName("entry-content")[0];
+  let mainPageChild = document.getElementsByClassName("et_pb_section_0 ")[0];
+  mainPageElement.insertBefore(loadingScreen, mainPageChild);  
+}
+
+function hideLoadingScreen() {
+  document.getElementsByClassName("underneath")[0].style.opacity = 1.0;
+
+  let loadingScreen = document.getElementsByClassName("loading")[0];
+  document.getElementsByClassName("entry-content")[0].removeChild(loadingScreen);
 }
