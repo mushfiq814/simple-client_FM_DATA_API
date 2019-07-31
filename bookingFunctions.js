@@ -15,7 +15,7 @@ var overlay = document.getElementsByClassName("toggle");
 const apiUrl = "https://api.disciplinedmindstutoring.com";
 
 // onload starting function
-window.onload = function() {
+window.onload = async function() {
   // cache the DOM
   var categoryList = document.getElementById("categoryList");
   var subjectList = document.getElementById("subjectList");
@@ -38,6 +38,9 @@ window.onload = function() {
   // generate the day-item elements with dates starting from today
   // drawCalendarWeek(0);
 
+  // start by disabling the pikaday calendar datepicker
+  dateList.disabled = true;
+
   // add Event Listeners
   submitBtn.addEventListener("click", create, false);
 
@@ -48,22 +51,16 @@ window.onload = function() {
       : updateSubjectDropDown();
   });
   subjectList.addEventListener("change", () => {
+    dateList.disabled = false;
     if (_globalDayValue != "") {
-      tutorList.disabled = false;
+      // tutorList.disabled = false;
       subjectList.value === "none"
         ? (tutorList.innerHTML = "")
         : updateTutorDropDown();
     }
   });
-  tutorList.addEventListener("change", () => {
-    timeList.disabled = false;
-    tutorList.value === "none"
-      ? (timeList.innerHTML = "")
-      : updateTimeDropDown();
-  });
   dateList.addEventListener("change", () => {
     tutorList.disabled = false;
-    timeList.disabled = false;
     durationList.disabled = false;
     let dt = new Date(dateList.value);
     _globalDayValue = formatDate(dt, 'MMDDYYYY');
@@ -71,14 +68,22 @@ window.onload = function() {
   });
   durationList.addEventListener("change", () => {
     updateTimeDropDown();   
-  })
+  });
+  tutorList.addEventListener("change", () => {
+    timeList.disabled = false;
+    tutorList.value === "none"
+      ? (timeList.innerHTML = "")
+      : updateTimeDropDown();
+  });
 
   // existing customer radio
   // let selectedExistingCustomerOpt = document.querySelector('input[name = "existingCustomerRadio"]:checked') ? document.querySelector('input[name = "existingCustomerRadio"]:checked').value : '';
   // console.log(selectedExistingCustomerOpt);
 
-  getSubjects();
-  getTutors();
+  document.getElementById("toggle").style.display = "block";
+  await getSubjects();
+  await getTutors();
+  document.getElementById("toggle").style.display = "none";
 };
 
 /**
@@ -141,28 +146,23 @@ function create(event) {
   var formData;
   formData = new FormData();
   // set desired values to be sent into http body
-  formData.append(
-    "subjectID",
-    subjectList.options[subjectList.selectedIndex].value
-  );
-  formData.append(
-    "tutorID",
-    tutorList.options[tutorList.selectedIndex].value
-  );
+  formData.append("subjectID", subjectList.options[subjectList.selectedIndex].value);
+  formData.append("tutorID", tutorList.options[tutorList.selectedIndex].value);
   formData.append("date", _globalDayValue);
   formData.append("start", timeList.options[timeList.selectedIndex].innerHTML);
   formData.append("student", studentNameField.value);
   formData.append("duration", durationList.options[durationList.selectedIndex].innerHTML);
+  formData.append("location", "South Tampa");
 
-  let additionalInfoText = `Existing Customer: #N/A
-  Student Email: ${studentEmailField.value}
-  Student Phone: ${studentPhoneField.value}
-  Parent Name: ${parentNameField.value}
-  Parent Email: ${parentEmailField.value}
-  Parent Phone: ${parentPhoneField.value}`;
-  additionalInfoText = additionalInfoText.replace(/[ \t\f\v]/g, '');
-  formData.append("additionalInfo",additionalInfoText);
-  
+  formData.append("studentEmail", studentEmailField.value);
+  formData.append("studentPhone", studentPhoneField.value);
+  formData.append("parentName", parentNameField.value);
+  formData.append("parentEmail", parentEmailField.value);
+  formData.append("parentPhone", parentPhoneField.value);
+  formData.append("existingCustomer", document.querySelector('input[name = "existingCustomerRadio"]:checked') ? document.querySelector('input[name = "existingCustomerRadio"]:checked').value : '');
+
+  formData.append("scriptName", "Create_Online_Booked_Lesson_in_FM_Lessons");
+  formData.append("scriptParam", "N/A");
 
   // POST request
   fetch(apiUrl + "/create", {
@@ -176,7 +176,7 @@ function create(event) {
     cache: "no-cache"
   }).then(() => {
     console.log("Request Complete...");
-    window.targe
+    window.location.href = 'https://disciplinedmindstutoring.com/appointment-created/';
   });
 }
 
@@ -393,6 +393,7 @@ async function updateTimeDropDown() {
     })
     .then(function(myJson) {
       var availableTimes = myJson.results.record.response.data;
+      console.log(availableTimes);
       let startTimes = calculateAvailableTimes(availableTimes);
       
       timeList.innerHTML = "";
@@ -418,7 +419,6 @@ function calculateAvailableTimes(arrayOfAvailableTimes) {
   let selectedDuration = durationList.options[durationList.selectedIndex].value;
   let result = [];
   
-  
   // check for when there are no available times
   if (arrayOfAvailableTimes[0].fieldData.ExampleText == "Tutor Not Available") {
     result.push(["Not Available"]);
@@ -428,7 +428,7 @@ function calculateAvailableTimes(arrayOfAvailableTimes) {
       let endTime = new Date (arrayOfAvailableTimes[i].fieldData.EndTimestamp);
       let defaultGap = 1;
       
-      let numOfLessons = ( ( ( (endTime-startTime) % (24*3600000) ) / 3600000 - selectedDuration ) / defaultGap ) + 1;
+      let numOfLessons = Math.floor( ( ( ( (endTime-startTime) % (24*3600000) ) / 3600000 - selectedDuration ) / defaultGap ) + 1 );
       
       if (numOfLessons==0 || numOfLessons==null || Number.isNaN(numOfLessons)) {
         result.push(["Not Available"]);
