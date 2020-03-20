@@ -375,8 +375,6 @@ async function updateTimeDropDown() {
   var selectedDate = _globalDayValue;
   var availableTimes = [];
 
-  // console.log(`${selectedDate}-${selectedTutorId}-ST`);
-
   document.getElementById("toggle").style.display = "block";
 
   await fetch(apiUrl + `/getTutorAvailability/${selectedDate}-${selectedTutorId}-ST`, {
@@ -392,10 +390,22 @@ async function updateTimeDropDown() {
       return response.json();
     })
     .then(function(myJson) {
-      var availableTimes = myJson.results.record.response.data;
-      console.log(availableTimes);
+      let availableTimes = myJson.results.record.response.data;
       let startTimes = calculateAvailableTimes(availableTimes);
       
+      // Collect current date [DATE ONLY; NO TIME VALUE]
+      let dt1 = new Date("8/19/2019");
+      let date = dt1.getDate();
+      let mon = dt1.getMonth();
+      let year = dt1.getFullYear();
+      
+      // If it is the current Date
+      if ((new Date(`${mon+1}/${date}/${year}`)).toString() == (new Date(selectedDate)).toString()) {
+        // let startTime = new Date(`${mon+1}/${date}/${year} ${startTimes[0]}`)
+        let allowedTime = new Date((new Date()).getTime() + 19*3600000);
+        startTimes = startTimes.filter(time => new Date(`${mon+1}/${date}/${year} ${time}`) > allowedTime);
+      }
+
       timeList.innerHTML = "";
       for (var j = 0; j < startTimes.length; j++) {
         var opt = document.createElement("option");
@@ -499,3 +509,4 @@ function hideLoadingScreen() {
   let loadingScreen = document.getElementsByClassName("loading")[0];
   document.getElementsByClassName("entry-content")[0].removeChild(loadingScreen);
 }
+

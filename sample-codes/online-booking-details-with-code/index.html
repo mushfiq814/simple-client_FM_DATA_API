@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="style.css">
+  <title>Document</title>
+</head>
+<body>
+
+  <div class="loading" id="loading">
+    <h2>Retrieving Lesson Info. Please wait...</h2>
+  </div>
+
+  <div class="container" id="container" style="display:none;">
+      <div class="label">Lesson ID</div>
+      <div class="field" id="lessonIdField"></div>
+      
+      <div class="label">Student</div>
+      <div class="field" id="studentNameField"></div>
+
+      <div class="label">Date</div>
+      <div class="field" id="dateField"></div>
+      
+      <div class="label">Start Time</div>
+      <div class="field" id="startTimeField"></div>
+      
+      <div class="label">End Time</div>
+      <div class="field" id="endTimeField"></div>
+      
+      <div class="label">Tutor</div>
+      <div class="field" id="tutorNameField"></div>
+      
+      <div class="label">Subject</div>
+      <div class="field" id="subjectNameField"></div>
+      
+      <div class="label">Location</div>
+      <div class="field" id="locationField"></div>
+      
+      <button class="button" style="grid-column: 1 / span 2;" onclick="cance">Cancel Lesson</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
